@@ -1,0 +1,9 @@
+{
+	"name": "Covid19-report-AzureDataFactory",
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "e9814448-0aa0-44eb-8f70-36d524de7659",
+		"tenantId": "c8a207e7-6237-4549-ad92-61fcb6526d81"
+	}
+}
