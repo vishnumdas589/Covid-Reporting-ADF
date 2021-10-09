@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "Covid19-report-AzureDataFactory"
+		},
+		"ls_ablob_covid19reportstorage_connectionString": {
+			"value": ""
+		},
+		"ls_adls_covidreportdlakes_accountKey": {
+			"value": ""
+		},
+		"ls_adls_covidreportdlakes_properties_typeProperties_url": {
+			"value": "https://covidreportdlakes.dfs.core.windows.net"
+		},
+		"ls_http_opendata_ecdc_europe_eu_properties_typeProperties_url": {
+			"value": "@{linkedService().BaseURL}"
+		},
+		"covid data trigger_properties_typeProperties_scope": {
+			"value": "/subscriptions/dfa136d0-54a5-4342-ae29-c07806b3a0eb/resourceGroups/covid-reporting-rg/providers/Microsoft.Storage/storageAccounts/covid19reportstorage"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
