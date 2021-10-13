@@ -1,0 +1,22 @@
+{
+	"name": "ds_processed_hospital_admission_daily_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_covidreportdlakes",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "ecdc/Hospital_Admissions_Daily",
+				"fileSystem": "processed"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
