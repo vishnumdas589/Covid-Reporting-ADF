@@ -1,0 +1,135 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "Covid19-report-AzureDataFactory"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_Processed_hospital_admissions_weekly_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_covidreportdlakes",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "ecdc/hospital_addmisions_weekly",
+						"fileSystem": "processed"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_transform_hosptial_admissions')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_ecdc_hospital_admissions_raw_csv",
+								"type": "DatasetReference"
+							},
+							"name": "HospitalAdmissionSource"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_CountryLookup_csv",
+								"type": "DatasetReference"
+							},
+							"name": "CountryLookup"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_DIM_lookup_raw_csv",
+								"type": "DatasetReference"
+							},
+							"name": "DIMlookupSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_processed_hospital_admission_daily_csv",
+								"type": "DatasetReference"
+							},
+							"name": "SinkDailyHospitalAdmission"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_Processed_hospital_admissions_weekly_csv",
+								"type": "DatasetReference"
+							},
+							"name": "SinkWeeklyHospitalAdmission"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SelectFromSource"
+						},
+						{
+							"name": "LookupCountry"
+						},
+						{
+							"name": "SelectReqFromLookup"
+						},
+						{
+							"name": "SplitWeeklyDaily"
+						},
+						{
+							"name": "Aggregate1"
+						},
+						{
+							"name": "JoinStartEndDaily"
+						},
+						{
+							"name": "JoinStartEndWeekly"
+						},
+						{
+							"name": "PivotDailyindicator"
+						},
+						{
+							"name": "PivotWeeklyindicator"
+						},
+						{
+							"name": "SortCountryWeek"
+						},
+						{
+							"name": "SortCountryDate"
+						},
+						{
+							"name": "SelectForDailySink"
+						},
+						{
+							"name": "SelectForWeeklySink"
+						}
+					],
+					"script": "source(output(\n\t\tcountry as string,\n\t\tindicator as string,\n\t\tdate as date,\n\t\tyear_week as string,\n\t\tvalue as double,\n\t\tsource as string,\n\t\turl as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 100,\n\tignoreNoFilesFound: false) ~> HospitalAdmissionSource\nsource(output(\n\t\tcountry as string,\n\t\tcountry_code_2_digit as string,\n\t\tcountry_code_3_digit as string,\n\t\tcontinent as string,\n\t\tpopulation as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 100,\n\tignoreNoFilesFound: false) ~> CountryLookup\nsource(output(\n\t\tdate_key as date,\n\t\tdate as date,\n\t\tyear as string,\n\t\tmonth as short,\n\t\tday as short,\n\t\tday_name as string,\n\t\tday_of_year as short,\n\t\tweek_of_month as short,\n\t\tweek_of_year as string,\n\t\tmonth_name as string,\n\t\tyear_month as integer,\n\t\tyear_week as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 100,\n\tignoreNoFilesFound: false) ~> DIMlookupSource\nHospitalAdmissionSource select(mapColumn(\n\t\tcountry,\n\t\tindicator,\n\t\tRepoerted_date = date,\n\t\tyear_week,\n\t\tvalue,\n\t\tsource\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectFromSource\nSelectFromSource, CountryLookup lookup(SelectFromSource@country == CountryLookup@country,\n\tmultiple: false,\n\tpickup: 'any',\n\tbroadcast: 'auto')~> LookupCountry\nLookupCountry select(mapColumn(\n\t\tcountry = SelectFromSource@country,\n\t\tindicator,\n\t\tRepoerted_date,\n\t\tyear_week,\n\t\tvalue,\n\t\tsource,\n\t\tcountry_code_2_digit,\n\t\tcountry_code_3_digit,\n\t\tcontinent,\n\t\tpopulation\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectReqFromLookup\nSelectReqFromLookup split(indicator == 'Daily ICU occupancy'|| indicator== \"Daily hospital occupancy\",\n\tdisjoint: false) ~> SplitWeeklyDaily@(DailyHosAdmissionsReport, WeeklyHosAdmissionsReport)\nDIMlookupSource aggregate(groupBy(Reported_Week_Year = year+'-W'+lpad(week_of_year,2,'0')),\n\tStart_Week_day = min(date),\n\t\tEnd_week_day = max(date)) ~> Aggregate1\nSplitWeeklyDaily@DailyHosAdmissionsReport, Aggregate1 join(year_week == Reported_Week_Year,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinStartEndDaily\nSplitWeeklyDaily@WeeklyHosAdmissionsReport, Aggregate1 join(year_week == Reported_Week_Year,\n\tjoinType:'inner',\n\tbroadcast: 'auto')~> JoinStartEndWeekly\nJoinStartEndDaily pivot(groupBy(country,\n\t\tRepoerted_date,\n\t\tyear_week,\n\t\tcountry_code_2_digit,\n\t\tcountry_code_3_digit,\n\t\tcontinent,\n\t\tpopulation,\n\t\tReported_Week_Year,\n\t\tStart_Week_day,\n\t\tEnd_week_day),\n\tpivotBy(indicator, ['Daily ICU occupancy', 'Daily hospital occupancy']),\n\tCount = sum(value),\n\tcolumnNaming: '$V_$N',\n\tlateral: true) ~> PivotDailyindicator\nJoinStartEndWeekly pivot(groupBy(country,\n\t\tyear_week,\n\t\tcountry_code_2_digit,\n\t\tcountry_code_3_digit,\n\t\tpopulation,\n\t\tcontinent,\n\t\tStart_Week_day,\n\t\tEnd_week_day),\n\tpivotBy(indicator, ['Weekly new ICU admissions per 100k', 'Weekly new hospital admissions per 100k']),\n\tCounts = sum(value),\n\tcolumnNaming: '$V_$N',\n\tlateral: true) ~> PivotWeeklyindicator\nPivotWeeklyindicator sort(asc(country, true),\n\tdesc(year_week, true)) ~> SortCountryWeek\nPivotDailyindicator sort(asc(country, true),\n\tdesc(Repoerted_date, true)) ~> SortCountryDate\nSortCountryDate select(mapColumn(\n\t\tcountry,\n\t\tcontinent,\n\t\tcountry_code_2_digit,\n\t\tcountry_code_3_digit,\n\t\tReported_date = Repoerted_date,\n\t\tReported_Week_Year,\n\t\tpopulation,\n\t\tStart_Week_day,\n\t\tEnd_week_day,\n\t\t{Daily ICU occupancy_Count},\n\t\t{Daily hospital occupancy_Count}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectForDailySink\nSortCountryWeek select(mapColumn(\n\t\tcountry,\n\t\tyear_week,\n\t\tcountry_code_2_digit,\n\t\tcountry_code_3_digit,\n\t\tpopulation,\n\t\tcontinent,\n\t\tStart_Week_day,\n\t\tEnd_week_day,\n\t\t{Weekly new ICU admissions per 100k_Counts},\n\t\t{Weekly new hospital admissions per 100k_Counts}\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SelectForWeeklySink\nSelectForDailySink sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SinkDailyHospitalAdmission\nSelectForWeeklySink sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SinkWeeklyHospitalAdmission"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_Processed_hospital_admissions_weekly_csv')]"
+			]
+		}
+	]
+}
