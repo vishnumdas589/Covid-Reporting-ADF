@@ -506,8 +506,8 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": "country_lookup.csv",
-						"folderPath": "ecdc/country_lookup",
-						"fileSystem": "raw"
+						"folderPath": "country_lookup",
+						"fileSystem": "lookup"
 					},
 					"columnDelimiter": ",",
 					"escapeChar": "\\",
@@ -556,8 +556,8 @@
 					"location": {
 						"type": "AzureBlobFSLocation",
 						"fileName": "dim_date.csv",
-						"folderPath": "ecdc/dim_date",
-						"fileSystem": "raw"
+						"folderPath": "dim_date",
+						"fileSystem": "lookup"
 					},
 					"columnDelimiter": ",",
 					"escapeChar": "\\",
