@@ -10,7 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": "ecdc/hospital_addmisions",
+				"folderPath": "ecdc/hospital_addmisions_weekly",
 				"fileSystem": "processed"
 			},
 			"columnDelimiter": ",",
