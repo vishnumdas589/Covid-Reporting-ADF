@@ -1,5 +1,5 @@
 {
-	"name": "pl_ecdc_data_flow",
+	"name": "pl_cases_deaths_data_flow",
 	"properties": {
 		"activities": [
 			{
