@@ -75,13 +75,7 @@
 						"type": "SecureString",
 						"value": "[parameters('ls_db_population_data_accessToken')]"
 					},
-					"newClusterNodeType": "Standard_DS3_v2",
-					"newClusterNumOfWorker": "1",
-					"newClusterSparkEnvVars": {
-						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-					},
-					"newClusterVersion": "7.3.x-scala2.12",
-					"newClusterInitScripts": []
+					"existingClusterId": "1026-054502-41yuaki2"
 				}
 			},
 			"dependsOn": []
