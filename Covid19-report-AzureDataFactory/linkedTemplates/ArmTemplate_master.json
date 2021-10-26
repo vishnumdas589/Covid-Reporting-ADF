@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ls_adls_covidreportdlakes'"
 		},
+		"ls_db_population_data_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'ls_db_population_data'"
+		},
 		"ls_adls_covidreportdlakes_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://covidreportdlakes.dfs.core.windows.net"
@@ -59,6 +63,9 @@
 					},
 					"ls_adls_covidreportdlakes_accountKey": {
 						"value": "[parameters('ls_adls_covidreportdlakes_accountKey')]"
+					},
+					"ls_db_population_data_accessToken": {
+						"value": "[parameters('ls_db_population_data_accessToken')]"
 					},
 					"ls_adls_covidreportdlakes_properties_typeProperties_url": {
 						"value": "[parameters('ls_adls_covidreportdlakes_properties_typeProperties_url')]"

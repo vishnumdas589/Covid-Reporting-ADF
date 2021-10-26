@@ -11,6 +11,9 @@
 		"ls_adls_covidreportdlakes_accountKey": {
 			"value": ""
 		},
+		"ls_db_population_data_accessToken": {
+			"value": ""
+		},
 		"ls_adls_covidreportdlakes_properties_typeProperties_url": {
 			"value": "https://covidreportdlakes.dfs.core.windows.net"
 		},
